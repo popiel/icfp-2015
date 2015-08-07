@@ -1,0 +1,7 @@
+#!/bin/sh
+
+libs=`echo lib/*.jar | sed 's/ /:/g'`
+
+mem=`perl -e 'while (@ARGV) { $mem = "-Xmx$ARGV[1]M" if $ARGV[0] eq "-m"; shift @ARGV; } print $mem;' -- "$@"`
+
+java $mem -cp $libs com.aethericworlds.icfp2015.Main "$@"
