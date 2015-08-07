@@ -1,5 +1,7 @@
 package com.aethericworlds.icfp2015
 
+import spray.json._
+
 object Main extends Coordinator {
   def main(args: Array[String]) {
     val config = parseArgs(args)
@@ -20,3 +22,54 @@ class Coordinator {
 }
 
 case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil)
+
+case class Input(id: JsValue, units: List[Unit], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long])
+case class Unit(members: Set[Cell], pivot: Cell)
+case class Cube(x: Int, y: Int, z: Int) {
+  def toCell = Cell(x + (z - (z&1)) / 2, z)
+  def cw = Cube(-z, -x, -y)
+  def ccw = Cube(-y, -z, -x)
+  def unary_- = Cube(-x, -y, -z)
+  def + (that: Cube) = Cube(this.x + that.x, this.y + that.y, this.z + that.z)
+  def - (that: Cube) = Cube(this.x - that.x, this.y - that.y, this.z - that.z)
+}
+case class Cell(x: Int, y: Int) {
+  def toCube = {
+    val xx = x - (y - (y&1)) / 2
+    val zz = y
+    Cube(xx, -xx-zz, zz)
+  }
+
+  def e = Cell(x + 1, y)
+  def w = Cell(x - 1, y)
+  def se = Cell(x + y % 2, y + 1)
+  def sw = Cell(x - 1 + y % 2, y + 1)
+  def ne = Cell(x + y % 2, y - 1)
+  def nw = Cell(x - 1 + y % 2, y - 1)
+
+  def cw = toCube.cw.toCell
+  def ccw = toCube.ccw.toCell
+
+  def unary_- = toCube.unary_-.toCell
+  def + (that: Cell) = Cell(this.x + that.x + (this.y & that.y & 1), this.y + that.y)
+  def - (that: Cell) = this + -that
+}
+
+case class Board(width: Int, height: Int, filled: Set[Cell], sourceLength: Int, sourceSeed: Long, score: Long) {
+  override def toString = {
+    (0 until height).map { y =>
+      (if (y % 2 == 1) " " else "") +
+      (0 until width).map { x =>
+        if (filled(Cell(x, y))) "##" else "[]"
+      }.mkString("") + "\n"
+    }.mkString("") + s"Score: $score, Length: $sourceLength, Seed: $sourceSeed\n"
+  }
+
+  def + (unit: Unit) = {
+    val locked = copy(filled = filled ++ unit.members)
+  }
+}
+
+case class Output(problemId: JsValue, seed: Long, tag: String, solution: String)
+
+
