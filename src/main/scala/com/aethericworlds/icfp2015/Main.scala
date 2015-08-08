@@ -11,10 +11,12 @@ object Main extends Coordinator {
     val config = parseArgs(args)
     val outputs = for {
       input <- loadInputs(config.files)
+      _ = if (config.debug contains 'b') System.err.println(s"Problem ${write(input.id)} board:\n${input.board}")
+      _ = if (config.debug contains 'u') System.err.println(s"Problem ${write(input.id)} units:\n${input.units.map(_.toString).mkString("\n")}")
       seed <- config.seed.map(List(_)).getOrElse(input.sourceSeeds)
       phrase = config.phrases.mkString("")
       game = Game(input, Stream.continually(phrase).flatten, seed, config)
-      _ = System.err.println(s"problem ${write(input.id)}, seed $seed, score ${game.totalScore}")
+      _ = if (config.debug contains 's') System.err.println(s"Problem ${write(input.id)}, seed $seed, score ${game.totalScore}")
     } yield game.output
     println(formatOutputs(outputs))
   }
@@ -30,6 +32,7 @@ class Coordinator {
       case ("-c", num)    => c.copy(cores = Some(num.toInt))
       case ("-tag", tag)  => c.copy(tag = Some(tag))
       case ("-s", num)    => c.copy(seed = Some(num.toLong))
+      case ("-d", flags)  => c.copy(debug = flags)
       case (opt, value)   => throw new IllegalArgumentException(s"Unrecognized option '$opt'")
     } }
   }
@@ -42,7 +45,7 @@ class Coordinator {
   def formatOutputs(stuff: List[Output]) = write(stuff)
 }
 
-case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil, cores: Option[Int] = None, tag: Option[String] = None, seed: Option[Long] = None)
+case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil, cores: Option[Int] = None, tag: Option[String] = None, seed: Option[Long] = None, debug: String = "")
 
 case class Input(id: JValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long]) {
   val board = Board(width = width, height = height, filled = filled.toSet)
