@@ -12,7 +12,8 @@ object Main extends Coordinator {
     val outputs = for {
       input <- loadInputs(config.files)
       seed <- input.sourceSeeds
-      game = Game(input, Stream.continually("Ei! Ia! Ia! ").flatten, seed, config)
+      phrase = config.phrases.mkString("")
+      game = Game(input, Stream.continually(phrase).flatten, seed, config)
       _ = System.err.println(s"problem ${write(input.id)}, seed $seed, score ${game.totalScore}")
     } yield game.output
     println(formatOutputs(outputs))
