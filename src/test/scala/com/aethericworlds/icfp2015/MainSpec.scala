@@ -19,8 +19,8 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
         Main.parseArgs(Array("-m", "10", "-m", "5")) should equal (Config(Nil, None, Some(5), Nil))
       }
       it ("should read phrases properly") {
-        Main.parseArgs(Array("-p", "Ei!")) should equal (Config(Nil, None, None, List("ei!")))
-        Main.parseArgs(Array("-p", "Ei!", "-p", "Elspeth!")) should equal (Config(Nil, None, None, List("ei!", "elspeth!")))
+        Main.parseArgs(Array("-p", "Ei!")) should equal (Config(Nil, None, None, List("Ei!")))
+        Main.parseArgs(Array("-p", "Ei!", "-p", "Elspeth!")) should equal (Config(Nil, None, None, List("Ei!", "Elspeth!")))
       }
     }
 

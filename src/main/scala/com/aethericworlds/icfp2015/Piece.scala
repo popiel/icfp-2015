@@ -61,13 +61,14 @@ case object CommandCW extends Command { def apply(p: Piece) = p.cw }
 case object CommandCCW extends Command { def apply(p: Piece) = p.ccw }
 
 object Command {
-  def apply(c: Char) = {
+  def apply(ch: Char) = {
+    val c = ch.toLower
     if ("p'!.03" contains c) CommandW
     else if ("bcefy2" contains c) CommandE
     else if ("aghij4" contains c) CommandSW
     else if ("lmno 5" contains c) CommandSE
     else if ("dqrvz1" contains c) CommandCW
     else if ("kstuwx" contains c) CommandCCW
-    else throw new IllegalArgumentException("Bad character " + c + " in command sequence")
+    else throw new IllegalArgumentException("Bad character " + ch + " in command sequence")
   }
 }

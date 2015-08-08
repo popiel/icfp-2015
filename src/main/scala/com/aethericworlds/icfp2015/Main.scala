@@ -26,7 +26,7 @@ class Coordinator {
       case ("-f", file)   => c.copy(files = c.files :+ file)
       case ("-t", num)    => c.copy(timeLimit = Some(num.toInt))
       case ("-m", num)    => c.copy(memoryLimit = Some(num.toInt))
-      case ("-p", phrase) => c.copy(phrases = c.phrases :+ phrase.toLowerCase)
+      case ("-p", phrase) => c.copy(phrases = c.phrases :+ phrase)
       case ("-c", num)    => c.copy(cores = Some(num.toInt))
       case ("-tag", tag)  => c.copy(tag = Some(tag))
       case ("-s", num)    => c.copy(seed = Some(num.toLong))
