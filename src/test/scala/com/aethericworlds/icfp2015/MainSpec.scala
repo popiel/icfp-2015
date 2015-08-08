@@ -105,4 +105,10 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
       Cell(1, 0) - Cell(1, 0) should equal (Cell(0, 0)) withClue("j")
     }
   }
+
+  describe ("Source") {
+    it("should produce the documented sequence") {
+      new Source(17).take(10).toList should equal (List(0, 24107, 16552, 12125, 9427, 13152, 21440, 3383, 6873, 16117))
+    }
+  }
 }
