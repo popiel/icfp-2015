@@ -35,7 +35,6 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
     }
   }
 
-
   describe("Cell") {
     it ("should move in the cardinal directions cleanly") {
       withClue("e") { Cell(0, 0).e should equal (Cell(1, 0)) }
@@ -120,6 +119,101 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
   describe ("Source") {
     it("should produce the documented sequence") {
       new Source(17).take(10).toList should equal (List(0, 24107, 16552, 12125, 9427, 13152, 21440, 3383, 6873, 16117))
+    }
+  }
+
+  describe ("Pinning the Game") {
+    it ("should have the proper piece sequence") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val game = Game(input, "", 0, Config())
+      game.pieces.take(10).map(_.toString).mkString("\n") should equal (
+"""P#
+
+P#
+
+P###
+ ##[]
+
+P###
+ ##[]
+
+##P###
+
+P###
+ ##[]
+
+##P###
+
+P#
+
+P###
+
+##P###
+""")
+    }
+
+    it ("should have the proper destination sequence") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val game = Game(input, """
+iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
+mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii
+piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
+""", 0, Config())
+      game.placements.take(4).map(_.end.toString).mkString("\n") should equal (
+"""[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ ##[][][][][][][][][]
+
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ ####[][][][][][][][]
+
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][]####[][][][][][]
+ ######[][][][][][][]
+
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][][][][][][][][][]
+ [][][][][][][][][][]
+[][]########[][][][]
+ ######[]##[][][][][]
+""")
+    }
+
+    it ("should compute the proper score") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val game = Game(input, """
+iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
+mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii
+piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
+""", 0, Config())
+      game.moveScore should equal (61)
     }
   }
 }

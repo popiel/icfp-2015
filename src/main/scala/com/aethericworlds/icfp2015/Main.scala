@@ -32,7 +32,9 @@ class Coordinator {
 
 case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil)
 
-case class Input(id: JValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long])
+case class Input(id: JValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long]) {
+  val board = Board(width = width, height = height, filled = filled.toSet)
+}
 case class Piece(members: Set[Cell], pivot: Cell) {
   def + (that: Cell) = Piece(members.map(_ + that), pivot + that)
   def - (that: Cell) = this + -that
@@ -46,16 +48,36 @@ case class Piece(members: Set[Cell], pivot: Cell) {
     val b = Piece(a.members.map(_.ccw), Cell(0, 0))
     b + pivot
   }
-  def valid(implicit board: Board): Boolean = {
+  def valid(board: Board): Boolean = {
     !members.exists(m => m.x < 0 || m.y < 0 || m.x >= board.width || m.y >= board.height || board.filled(m))
   }
-  def enter(implicit board: Board): Piece = {
+  def enter(board: Board): Piece = {
     val y = members.map(_.y).min
     val lifted = this + Cell(0, -y)
     val minX = lifted.members.map(_.x).min
     val maxX = lifted.members.map(_.x).max
-    val x = (board.width - maxX + minX) / 2 - minX
+    val x = (board.width - maxX + minX - 1) / 2 - minX
     lifted + Cell(x, 0)
+  }
+  def apply(c: Command) = c(this)
+  override def toString() = {
+    val minY = members.map(_.y).min min pivot.y
+    val lifted = this + Cell(0, -minY)
+    val maxY = lifted.members.map(_.y).max max pivot.y
+    val minX = lifted.members.map(_.x).min min pivot.x
+    val maxX = lifted.members.map(_.x).max max pivot.x
+
+    (0 to maxY).map { y =>
+      (if ((y & 1) == 1) " " else "") +
+      (minX to maxX).map { x =>
+        val c = Cell(x, y)
+        if (c == pivot) {
+          if (lifted.members(c)) "P#" else "P]"
+        } else {
+          if (lifted.members(c)) "##" else "[]"
+        }
+      }.mkString("") + "\n"
+    }.mkString("")
   }
 }
 
@@ -101,19 +123,17 @@ object Cell {
   val ALL_DIRS = List(E, W, SE, SW, NE, NW)
 }
 
-case class Board(width: Int, height: Int, filled: Set[Cell], sourceLength: Int, sourceSeed: Long, score: Long) {
+case class Board(width: Int, height: Int, filled: Set[Cell]) {
   override def toString = {
     (0 until height).map { y =>
       (if (y % 2 == 1) " " else "") +
       (0 until width).map { x =>
         if (filled(Cell(x, y))) "##" else "[]"
       }.mkString("") + "\n"
-    }.mkString("") + s"Score: $score, Length: $sourceLength, Seed: $sourceSeed\n"
+    }.mkString("")
   }
 
-  def + (unit: Piece) = {
-    val locked = copy(filled = filled ++ unit.members)
-  }
+  def + (unit: Piece) = copy(filled = filled ++ unit.members)
 }
 
 case class Output(problemId: JValue, seed: Long, tag: String, solution: String)
@@ -125,4 +145,71 @@ class Source(var seed: Long) extends Iterator[Int] {
     output.toInt
   }
   def hasNext = true
+}
+
+sealed trait Command {
+  def apply(p: Piece): Piece
+}
+case object CommandW extends Command { def apply(p: Piece) = p + Cell.W }
+case object CommandE extends Command { def apply(p: Piece) = p + Cell.E }
+case object CommandSW extends Command { def apply(p: Piece) = p + Cell.SW }
+case object CommandSE extends Command { def apply(p: Piece) = p + Cell.SE }
+case object CommandCW extends Command { def apply(p: Piece) = p.cw }
+case object CommandCCW extends Command { def apply(p: Piece) = p.ccw }
+
+object Command {
+  def apply(c: Char) = {
+    if ("p'!.03" contains c) List(CommandW)
+    else if ("bcefy2" contains c) List(CommandE)
+    else if ("aghij4" contains c) List(CommandSW)
+    else if ("lmno 5" contains c) List(CommandSE)
+    else if ("dqrvz1" contains c) List(CommandCW)
+    else if ("kstuwx" contains c) List(CommandCCW)
+    else if ("\t\n\r" contains c) List()
+    else throw new IllegalArgumentException("Bad character " + c + " in command sequence")
+  }
+}
+
+case class Placement(start: Board, piece: Piece, commands: Traversable[Command]) {
+  val (positions, path) = {
+    var pos = piece.enter(start) :: Nil
+    val iter = commands.toIterator
+    while (pos.head.valid(start) && iter.hasNext) pos = iter.next.apply(pos.head) :: pos
+    (pos.tail, commands.take((pos.size - 1) max 0))
+  }
+  require(positions.size == positions.toSet.size, "Repeated positions in path")
+
+  def remaining = commands.drop(path.size)
+
+  val middle = if (positions.nonEmpty) start + positions.head else start
+
+  val lines = (0 until start.height).filter(y => (0 until start.width).forall(x => middle.filled(Cell(x, y)))).toList
+  val points = if (positions.nonEmpty) piece.members.size + 50 * (lines.size + 1) * lines.size else 0
+  def lineBonus(prevLines: Int) = if (prevLines > 1) (prevLines - 1) * points / 10 else 0
+  val end = if (lines.isEmpty) middle else
+    middle.copy(filled = middle.filled
+      .filter { case Cell(x, y) => !(lines contains y) }
+      .map { case Cell(x, y) => Cell(x, y + lines.count(_ > y)) }
+    )
+}
+
+case class Game(input: Input, commands: Traversable[Char], seed: Long, config: Config) {
+  val numUnits = input.units.size
+  val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
+  val pBuf = scala.collection.mutable.ListBuffer[Placement]()
+  var remain: Traversable[Command] = commands.flatMap(Command(_))
+  var board = input.board
+  pieces.foreach { piece =>
+    val place = Placement(board, piece, remain)
+    pBuf += place
+    remain = place.remaining
+    board = place.end
+  }
+  val placements = pBuf.toList
+  val path = placements.flatMap(_.path)
+  val moveScore = placements.map(_.points).sum + placements.sliding(2).map(l => l(1).lineBonus(l(0).lines.size)).sum
+  val powerScore = config.phrases.map { phrase =>
+    val count = path.sliding(phrase.size).count(_ == phrase)
+    if (count > 0) 300 + 2 * phrase.size * count else 0
+  }.sum
 }
