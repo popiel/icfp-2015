@@ -23,6 +23,8 @@ class Coordinator {
       case ("-t", num)    => c.copy(timeLimit = Some(num.toInt))
       case ("-m", num)    => c.copy(memoryLimit = Some(num.toInt))
       case ("-p", phrase) => c.copy(phrases = c.phrases :+ phrase.toLowerCase)
+      case ("-c", num)    => c.copy(cores = Some(num.toInt))
+      case ("-tag", tag)  => c.copy(tag = tag)
       case (opt, value)   => throw new IllegalArgumentException(s"Unrecognized option '$opt'")
     } }
   }
@@ -35,7 +37,7 @@ class Coordinator {
   def formatOutputs(stuff: List[Output]) = write(stuff)
 }
 
-case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil)
+case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil, cores: Option[Int] = None, tag: String = "")
 
 case class Input(id: JValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long]) {
   val board = Board(width = width, height = height, filled = filled.toSet)
@@ -218,5 +220,5 @@ case class Game(input: Input, commands: Traversable[Char], seed: Long, config: C
     if (count > 0) 300 + 2 * phrase.size * count else 0
   }.sum
   def totalScore = moveScore + powerScore
-  val output = Output(input.id, seed, "", path)
+  val output = Output(input.id, seed, config.tag, path)
 }
