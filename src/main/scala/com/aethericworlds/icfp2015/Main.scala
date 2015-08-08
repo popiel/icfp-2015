@@ -1,6 +1,8 @@
 package com.aethericworlds.icfp2015
 
-import spray.json._
+import org.json4s._
+import org.json4s.native.Serialization
+import org.json4s.native.Serialization.{read, write}
 
 object Main extends Coordinator {
   def main(args: Array[String]) {
@@ -19,11 +21,18 @@ class Coordinator {
       case (opt, value)   => throw new IllegalArgumentException(s"Unrecognized option '$opt'")
     } }
   }
+
+  implicit val formats = Serialization.formats(NoTypeHints)
+
+  def loadInputs(files: List[String]): List[Input] =
+    files.map { file => read[Input](io.Source.fromFile(file).getLines.mkString("\n")) }
+
+  def formatOutputs(stuff: List[Output]) = write(stuff)
 }
 
 case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil)
 
-case class Input(id: JsValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long])
+case class Input(id: JValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long])
 case class Piece(members: Set[Cell], pivot: Cell) {
   def + (that: Cell) = Piece(members.map(_ + that), pivot + that)
   def - (that: Cell) = this + -that
@@ -50,7 +59,7 @@ case class Piece(members: Set[Cell], pivot: Cell) {
   }
 }
 
-
+// Thanks go to http://www.redblobgames.com/grids/hexagons/#rotation for this representation.
 case class Cube(x: Int, y: Int, z: Int) {
   def toCell = Cell(x + (z - (z&1)) / 2, z)
   def cw = Cube(-z, -x, -y)
@@ -102,12 +111,12 @@ case class Board(width: Int, height: Int, filled: Set[Cell], sourceLength: Int, 
     }.mkString("") + s"Score: $score, Length: $sourceLength, Seed: $sourceSeed\n"
   }
 
-  def + (unit: Unit) = {
+  def + (unit: Piece) = {
     val locked = copy(filled = filled ++ unit.members)
   }
 }
 
-case class Output(problemId: JsValue, seed: Long, tag: String, solution: String)
+case class Output(problemId: JValue, seed: Long, tag: String, solution: String)
 
 class Source(var seed: Long) extends Iterator[Int] {
   def next = {

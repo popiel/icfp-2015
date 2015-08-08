@@ -1,5 +1,6 @@
 package com.aethericworlds.icfp2015
 
+import org.json4s._
 import org.scalatest._
 
 class MainSpec extends FunSpec with Matchers with AppendedClues {
@@ -20,6 +21,16 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
       it ("should read phrases properly") {
         Main.parseArgs(Array("-p", "Ei!")) should equal (Config(Nil, None, None, List("ei!")))
         Main.parseArgs(Array("-p", "Ei!", "-p", "Elspeth!")) should equal (Config(Nil, None, None, List("ei!", "elspeth!")))
+      }
+    }
+
+    describe ("loadInputs") {
+      it("should be able to load problem_0.json") {
+        val input = Main.loadInputs(List("src/test/resources/problem_0.json"))(0)
+        input.id should equal (JInt(0))
+        input.sourceLength should equal (100)
+        input.units should have length (18)
+        input.units(1) should equal (Piece(Set(Cell(0, 0), Cell(2, 0)), Cell(1, 0)))
       }
     }
   }
