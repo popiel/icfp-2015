@@ -215,5 +215,25 @@ piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
 """, 0, Config())
       game.moveScore should equal (61)
     }
+
+    it ("should serialize properly") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val game = Game(input, """
+iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
+mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii
+piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
+""", 0, Config())
+      Main.formatOutputs(List(game.output)) should equal (
+"""[{"problemId":6,"seed":0,"tag":"","solution":"iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeeemmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiiipiimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"}]""")
+    }
+
+    it ("should function properly with a command Stream") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val game = Game(input, Stream.continually("Ei! ").flatten, 0, Config(phrases = List("ei!")))
+      game.moveScore should equal (20)
+      game.powerScore should equal (450)
+      game.totalScore should equal (470)
+      game.output.solution.length should equal (100)
+    }
   }
 }

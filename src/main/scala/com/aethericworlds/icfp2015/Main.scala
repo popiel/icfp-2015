@@ -159,13 +159,12 @@ case object CommandCCW extends Command { def apply(p: Piece) = p.ccw }
 
 object Command {
   def apply(c: Char) = {
-    if ("p'!.03" contains c) List(CommandW)
-    else if ("bcefy2" contains c) List(CommandE)
-    else if ("aghij4" contains c) List(CommandSW)
-    else if ("lmno 5" contains c) List(CommandSE)
-    else if ("dqrvz1" contains c) List(CommandCW)
-    else if ("kstuwx" contains c) List(CommandCCW)
-    else if ("\t\n\r" contains c) List()
+    if ("p'!.03" contains c) CommandW
+    else if ("bcefy2" contains c) CommandE
+    else if ("aghij4" contains c) CommandSW
+    else if ("lmno 5" contains c) CommandSE
+    else if ("dqrvz1" contains c) CommandCW
+    else if ("kstuwx" contains c) CommandCCW
     else throw new IllegalArgumentException("Bad character " + c + " in command sequence")
   }
 }
@@ -194,10 +193,11 @@ case class Placement(start: Board, piece: Piece, commands: Traversable[Command])
 }
 
 case class Game(input: Input, commands: Traversable[Char], seed: Long, config: Config) {
+  val actualCommands = commands.filter{ c => !("\t\n\r".contains(c)) }.map(_.toLower)
   val numUnits = input.units.size
   val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
   val pBuf = scala.collection.mutable.ListBuffer[Placement]()
-  var remain: Traversable[Command] = commands.flatMap(Command(_))
+  var remain: Traversable[Command] = actualCommands.map(Command(_))
   var board = input.board
   pieces.foreach { piece =>
     val place = Placement(board, piece, remain)
@@ -206,10 +206,12 @@ case class Game(input: Input, commands: Traversable[Char], seed: Long, config: C
     board = place.end
   }
   val placements = pBuf.toList
-  val path = placements.flatMap(_.path)
+  val path = actualCommands.take(placements.map(_.path.size).sum).mkString("")
   val moveScore = placements.map(_.points).sum + placements.sliding(2).map(l => l(1).lineBonus(l(0).lines.size)).sum
   val powerScore = config.phrases.map { phrase =>
     val count = path.sliding(phrase.size).count(_ == phrase)
     if (count > 0) 300 + 2 * phrase.size * count else 0
   }.sum
+  def totalScore = moveScore + powerScore
+  val output = Output(input.id, seed, "", path)
 }
