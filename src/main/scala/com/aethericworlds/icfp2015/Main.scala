@@ -7,7 +7,12 @@ import org.json4s.native.Serialization.{read, write}
 object Main extends Coordinator {
   def main(args: Array[String]) {
     val config = parseArgs(args)
-    println(config)
+    val outputs = for {
+      input <- loadInputs(config.files)
+      seed <- input.sourceSeeds
+      game = Game(input, Stream.continually("Ei! ").flatten, seed, config)
+    } yield game.output
+    println(formatOutputs(outputs))
   }
 }
 
