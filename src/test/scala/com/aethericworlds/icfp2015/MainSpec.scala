@@ -224,7 +224,7 @@ mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii
 piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
 """, 0, Config())
       Main.formatOutputs(List(game.output)) should equal (
-"""[{"problemId":6,"seed":0,"tag":"","solution":"iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeeemmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiiipiimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"}]""")
+"""[{"problemId":6,"seed":0,"solution":"iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeeemmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiiipiimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"}]""")
     }
 
     it ("should function properly with a command Stream") {
