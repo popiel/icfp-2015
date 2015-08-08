@@ -24,7 +24,7 @@ case class Placement(start: Board, piece: Piece, commands: Traversable[Command])
 }
 
 case class Game(input: Input, commands: Traversable[Char], seed: Long, config: Config) {
-  val actualCommands = commands.filter{ c => !("\t\n\r".contains(c)) }.map(_.toLower)
+  val actualCommands = commands.filter{ c => !("\t\n\r".contains(c)) }
   val numUnits = input.units.size
   val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
   val pBuf = scala.collection.mutable.ListBuffer[Placement]()
