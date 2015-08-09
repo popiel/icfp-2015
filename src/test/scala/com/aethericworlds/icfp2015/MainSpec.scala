@@ -141,6 +141,36 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
     }
   }
 
+  describe ("Command translation") {
+    it ("should translate Ei!") {
+      Command("Ei!") should equal (List(CommandE, CommandSW, CommandW))
+    }
+
+    it ("should translate Ia! Ia!") {
+      Command("Ia! Ia!") should equal (List(CommandSW, CommandSW, CommandW, CommandSE, CommandSW, CommandSW, CommandW))
+    }
+
+    it ("should translate Yuggoth") {
+      Command("Yuggoth") should equal (List(CommandE, CommandCCW, CommandSW, CommandSW, CommandSE, CommandCCW, CommandSW))
+    }
+
+    it ("should translate R'lyeh") {
+      Command("R'lyeh") should equal (List(CommandCW, CommandW, CommandSE, CommandE, CommandE, CommandSW))
+    }
+
+    it ("should translate worshipping chants") {
+      Command("Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn") should equal (List(
+        CommandW, CommandSW, CommandW, CommandSE, CommandSW, CommandSE, CommandCCW, CommandSW,
+        CommandSE, CommandSE, CommandSW, CommandSE, CommandCCW, CommandW, CommandSE, CommandSW,
+        CommandE, CommandSW, CommandSE, CommandE, CommandCCW, CommandSW, CommandCCW, CommandSE,
+        CommandSW, CommandCCW, CommandSE, CommandCW, CommandW, CommandSE, CommandE, CommandE,
+        CommandSW, CommandSE, CommandCCW, CommandSW, CommandSW, CommandSW, CommandW, CommandSE,
+        CommandSW, CommandSW, CommandSE, CommandSE, CommandE, CommandSW, CommandCCW, CommandSW,
+        CommandSW, CommandSE
+      ))
+    }
+  }
+
   describe ("Pinning the Game") {
     it ("should have the proper piece sequence") {
       val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)

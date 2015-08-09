@@ -61,7 +61,7 @@ case object CommandCW extends Command { def apply(p: Piece) = p.cw }
 case object CommandCCW extends Command { def apply(p: Piece) = p.ccw }
 
 object Command {
-  def apply(ch: Char) = {
+  def apply(ch: Char): Command = {
     val c = ch.toLower
     if ("p'!.03" contains c) CommandW
     else if ("bcefy2" contains c) CommandE
@@ -71,6 +71,8 @@ object Command {
     else if ("kstuwx" contains c) CommandCCW
     else throw new IllegalArgumentException("Bad character " + ch + " in command sequence")
   }
+
+  def apply(string: Traversable[Char]): Traversable[Command] = string.map{Command(_)}
 
   val all = List(CommandW, CommandE, CommandSW, CommandSE, CommandCW, CommandCCW)
 }
