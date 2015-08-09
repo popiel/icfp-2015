@@ -44,12 +44,16 @@ case class Game(input: Input, commands: Traversable[Char], seed: Long, config: C
   val iter = actualCommands.toIterator
   while (iter.nonEmpty && !state.gameOver) {
     val c = iter.next
-    used = c :: used
-    state = state(Command(c))
-    if (config.debug.contains('@')) System.err.println(state.piece.map(p =>
-      p.toString + "pivot: " + p.pivot + "  members: " + p.members + "\n"
-    ).getOrElse(" -------- "))
-    if (state.piece == None) pBuf += ((state, used))
+    try {
+      state = state(Command(c))
+      used = c :: used
+      if (config.debug.contains('@')) System.err.println(state.piece.map(p =>
+        p.toString + "pivot: " + p.pivot + "  members: " + p.members + "\n"
+      ).getOrElse(" -------- "))
+      if (state.piece == None) pBuf += ((state, used))
+    } catch {
+      case e: IllegalArgumentException if commands.isInstanceOf[Stream[_]] => ()
+    }
   }
   val placements = pBuf.toList
   val path = used.reverse.mkString("")
