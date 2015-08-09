@@ -122,6 +122,25 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
     }
   }
 
+  describe ("Piece") {
+    val p = Piece(Set(Cell(0, 0), Cell(2, 0)), Cell(1, 0))
+
+    it ("should properly reflect rotational congruency") {
+      p.cw should not (equal (p))
+      p.cw.cw should not (equal (p))
+      p.cw.cw.cw should equal (p)
+
+      p.cw.cw.cw.hashCode should equal (p.hashCode)
+    }
+
+    it ("should properly reflect translational congruency") {
+      p(CommandW) should not (equal (p))
+      p(CommandW)(CommandE) should equal (p)
+
+      p(CommandW)(CommandE).hashCode should equal (p.hashCode)
+    }
+  }
+
   describe ("Pinning the Game") {
     it ("should have the proper piece sequence") {
       val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
@@ -234,6 +253,56 @@ piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
       game.powerScore should equal (450)
       game.totalScore should equal (470)
       game.output.solution.length should equal (100)
+    }
+
+    it ("should compute the proper score for the long input") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val game = Game(input, """
+iiiiiiiimmiiiiiimimmiiiimimimmimimimimmimimimeemimeeeemimim
+imimiiiiiimmeemimimimimiimimimmeemimimimmeeeemimimimmiiiiii
+pmiimimimeeemmimimmemimimimiiiiiimeeemimimimimeeemimimimmii
+iimemimimmiiiipimeeemimimmiiiippmeeeeemimimimiiiimmimimeemi
+mimeeeemimimiiiipmeeemmimmiimimmmimimeemimimimmeeemimiiiiip
+miiiimmeeemimimiiiipmmiipmmimmiippimemimeeeemimmiipppmeeeee
+mimimmiimipmeeeemimimiimmeeeeemimmeemimmeeeemimiiippmiippmi
+iimmiimimmmmmeeeemimmiippimmimimeemimimimmeemimimimmeemimim
+imiimimimeeemmimimmmiiiiipimeemimimimmiiiimimmiiiiiiiimiimi
+mimimeeemmimimimmiiiiiimimmemimimimimmimimimeemimiiiiiiiimi
+iiimimimiimimimmimmimimimimmeeeemimimimimmmimimimimeemimimi
+mimmmemimimmiiiiiiimiimimimmiiiiiimeeeeemimimimimmimimimmmm
+emimimmeeeemimimimmiimimimmiiiiiipmeeeeemimimimimmiiiiimmem
+imimimimmmmimimmeeeemimimimimeeemimimimmiimimimeeemmimimmii
+iiiiimimiiiiiimimmiiiiiiiimmimimimimiiiimimimeemimimimimmee
+emimimimimiiiiiiimiiiimimmemimimimmeemimimimeeemmimimmiiiii
+immiiiipmmiiimmmimimeemimimeeemmimmiiiippmiiiimiiippimiimim
+eemimimeeeemimimiiiipmeemimimiimiimimmimeeemimimmippipmmiim
+emimmipimeeeemimmeemimiippimeeeeemimimmmimmmeeeemimimiiipim
+miipmemimmeeeemimimiipipimmipppimeeemimmpppmmpmeeeeemimmemm
+""", 0, Config())
+      game.moveScore should equal (3261)
+    }
+
+    it ("should complain if there is too much input") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      val ex = the[IllegalArgumentException] thrownBy { Game(input, """
+iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
+mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii
+piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
+eee
+""", 0, Config()) }
+      ex.getMessage should include ("didn't consume all")
+    }
+
+    it ("should complain if you rotate to a congruent position") {
+      val input = Main.loadInputs(List("src/test/resources/problem_7.json"))(0)
+      val ex = the[IllegalArgumentException] thrownBy { Game(input, """111""", 0, Config()) }
+      ex.getMessage should include ("Repeated positions in path")
+    }
+
+    it ("should complain if you wiggle back to a congruent position") {
+      val input = Main.loadInputs(List("src/test/resources/problem_7.json"))(0)
+      val ex = the[IllegalArgumentException] thrownBy { Game(input, """ep""", 0, Config()) }
+      ex.getMessage should include ("Repeated positions in path")
     }
   }
 }

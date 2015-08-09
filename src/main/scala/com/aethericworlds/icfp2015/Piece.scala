@@ -71,4 +71,6 @@ object Command {
     else if ("kstuwx" contains c) CommandCCW
     else throw new IllegalArgumentException("Bad character " + ch + " in command sequence")
   }
+
+  val all = List(CommandW, CommandE, CommandSW, CommandSE, CommandCW, CommandCCW)
 }

@@ -1,12 +1,13 @@
 package com.aethericworlds.icfp2015
 
 case class Placement(start: Board, piece: Piece, commands: Traversable[Command]) {
-  val (positions, path) = {
+  val positions = {
     var pos = piece.enter(start) :: Nil
     val iter = commands.toIterator
     while (pos.head.valid(start) && iter.hasNext) pos = iter.next.apply(pos.head) :: pos
-    (pos.tail, commands.take((pos.size - 1) max 0))
+    if (pos.head.valid(start)) pos else pos.tail
   }
+  val path = commands.take(positions.size)
   require(positions.size == positions.toSet.size, "Repeated positions in path")
 
   def remaining = commands.drop(path.size)
@@ -36,6 +37,8 @@ case class Game(input: Input, commands: Traversable[Char], seed: Long, config: C
     remain = place.remaining
     board = place.end
   }
+  if (remain.nonEmpty && !remain.isInstanceOf[Stream[Command]])
+    throw new IllegalArgumentException(s"didn't consume all commands from ${remain.getClass.getName}, ${remain.size} remaining")
   val placements = pBuf.toList
   val path = actualCommands.take(placements.map(_.path.size).sum).mkString("")
   val moveScore = placements.map(_.points).sum + placements.sliding(2).map(l => l(1).lineBonus(l(0).lines.size)).sum
