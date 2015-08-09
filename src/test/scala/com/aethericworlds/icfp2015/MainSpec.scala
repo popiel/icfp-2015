@@ -178,7 +178,7 @@ iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
 mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii
 piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm
 """, 0, Config())
-      game.placements.take(4).map(_.end.toString).mkString("\n") should equal (
+      game.placements.take(4).map(_._1.board.toString).mkString("\n") should equal (
 """[][][][][][][][][][]
  [][][][][][][][][][]
 [][][][][][][][][][]
@@ -295,14 +295,14 @@ eee
 
     it ("should complain if you rotate to a congruent position") {
       val input = Main.loadInputs(List("src/test/resources/problem_7.json"))(0)
-      val ex = the[IllegalArgumentException] thrownBy { Game(input, """111""", 0, Config()) }
-      ex.getMessage should include ("Repeated positions in path")
+      val ex = the[IllegalArgumentException] thrownBy { Game(input, """a111""", 0, Config()) }
+      ex.getMessage should include ("Repeated position in path")
     }
 
     it ("should complain if you wiggle back to a congruent position") {
       val input = Main.loadInputs(List("src/test/resources/problem_7.json"))(0)
       val ex = the[IllegalArgumentException] thrownBy { Game(input, """ep""", 0, Config()) }
-      ex.getMessage should include ("Repeated positions in path")
+      ex.getMessage should include ("Repeated position in path")
     }
   }
 }

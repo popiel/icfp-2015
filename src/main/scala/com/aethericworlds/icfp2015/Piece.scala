@@ -32,15 +32,15 @@ case class Piece(members: Set[Cell], pivot: Cell) {
   override def toString() = {
     val minY = members.map(_.y).min min pivot.y
     val lifted = this + Cell(0, -minY)
-    val maxY = lifted.members.map(_.y).max max pivot.y
-    val minX = lifted.members.map(_.x).min min pivot.x
-    val maxX = lifted.members.map(_.x).max max pivot.x
+    val maxY = lifted.members.map(_.y).max max lifted.pivot.y
+    val minX = lifted.members.map(_.x).min min lifted.pivot.x
+    val maxX = lifted.members.map(_.x).max max lifted.pivot.x
 
     (0 to maxY).map { y =>
       (if ((y & 1) == 1) " " else "") +
       (minX to maxX).map { x =>
         val c = Cell(x, y)
-        if (c == pivot) {
+        if (c == lifted.pivot) {
           if (lifted.members(c)) "P#" else "P]"
         } else {
           if (lifted.members(c)) "##" else "[]"
