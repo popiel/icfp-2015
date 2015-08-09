@@ -10,13 +10,33 @@ case class Paths(start: Board, piece: Piece) {
     while (open.nonEmpty) {
       val entry = open.dequeue
       val (pos, how) = entry
-      closed += entry
-      if (pos.valid(start)) {
-        available += entry
-        val children = Command.all.map(c => (pos(c), c::how)).filter{case (p, h) => !closed.contains(p)}
-        open ++= children
+      if (!closed.contains(pos)) {
+        closed += entry
+        val children = Command.all.map(c => (pos(c), c::how))
+        val viable = children.filter(_._1.valid(start))
+        if (viable.size < children.size) available += ((pos, how.reverse))
+        open ++= viable.filter(x => !closed.contains(x._1))
       }
     }
     available
+  }
+}
+
+object Paths {
+  def findBest(start: GameState, depth: Int): (GameState, List[Command]) = {
+    if (depth == 0 || start.gameOver) (start, Nil)
+    else {
+      val paths = Paths(start.board, start.source.head)
+      val children = paths.reachable.toList map { case (piece, path) =>
+        val placed = start(piece)
+        val nest = findBest(placed, depth - 1)
+        (nest._1, path)
+      }
+      children.sortWith { (a, b) =>
+        if (a._1.score > b._1.score) true
+        else if (a._1.score < b._1.score) false
+        else a._1.board < b._1.board
+      }.head
+    }
   }
 }

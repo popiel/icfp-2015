@@ -14,8 +14,12 @@ object Main extends Coordinator {
       _ = if (config.debug contains 'b') System.err.println(s"Problem ${write(input.id)} board:\n${input.board}")
       _ = if (config.debug contains 'u') System.err.println(s"Problem ${write(input.id)} units:\n${input.units.map(_.toString).mkString("\n")}")
       seed <- config.seed.map(List(_)).getOrElse(input.sourceSeeds)
-      phrase = config.phrases.mkString("")
-      game = Game(input, Stream.continually(phrase).flatten, seed, config)
+      game = if (config.depth == None) {
+        val phrase = config.phrases.mkString("")
+        Game(input, Stream.continually(phrase).flatten, seed, config)
+      } else {
+        GameSearch(input, seed, config)
+      }
       _ = if (config.debug contains 'q') System.err.println(s"Problem ${write(input.id)}, seed $seed, pieces:\n${game.pieces.map(_.toString).mkString("\n")}")
       _ = if (config.debug contains 's') System.err.println(s"Problem ${write(input.id)}, seed $seed, score ${game.totalScore}")
     } yield game.output
@@ -34,6 +38,7 @@ class Coordinator {
       case ("-tag", tag)  => c.copy(tag = Some(tag))
       case ("-s", num)    => c.copy(seed = Some(num.toLong))
       case ("-d", flags)  => c.copy(debug = flags)
+      case ("-depth", num)=> c.copy(depth = Some(num.toInt))
       case (opt, value)   => throw new IllegalArgumentException(s"Unrecognized option '$opt'")
     } }
   }
@@ -46,7 +51,17 @@ class Coordinator {
   def formatOutputs(stuff: List[Output]) = write(stuff)
 }
 
-case class Config(files: List[String] = Nil, timeLimit: Option[Int] = None, memoryLimit: Option[Int] = None, phrases: List[String] = Nil, cores: Option[Int] = None, tag: Option[String] = None, seed: Option[Long] = None, debug: String = "")
+case class Config(
+  files: List[String] = Nil,
+  timeLimit: Option[Int] = None,
+  memoryLimit: Option[Int] = None,
+  phrases: List[String] = Nil,
+  cores: Option[Int] = None,
+  tag: Option[String] = None,
+  seed: Option[Long] = None,
+  debug: String = "",
+  depth: Option[Int] = None
+)
 
 case class Input(id: JValue, units: List[Piece], width: Int, height: Int, filled: List[Cell], sourceLength: Int, sourceSeeds: List[Long]) {
   val board = Board(width = width, height = height, filled = filled.toSet)

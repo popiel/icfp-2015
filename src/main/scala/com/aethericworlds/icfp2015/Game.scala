@@ -1,5 +1,7 @@
 package com.aethericworlds.icfp2015
 
+import scala.annotation.tailrec
+
 case class GameState(
   board: Board,
   source: List[Piece],
@@ -32,14 +34,47 @@ case class GameState(
       )
     GameState(end, source, None, lines.size, score + points + lineBonus)
   }
+
+  def apply(path: Traversable[Command]): GameState = (this /: path){ (s, c) => s(c) }
+
+  def apply(target: Piece): GameState = {
+    if (piece != None) throw new IllegalStateException("May not jump while falling")
+    if (!target.valid(board)) throw new IllegalArgumentException("May not jump into a wall")
+    val normal = source.head.enter(board)
+    if (normal != target.enter(board) &&
+        normal != target.cw.enter(board) &&
+        normal != target.cw.cw.enter(board) &&
+        normal != target.cw.cw.cw.enter(board) &&
+        normal != target.cw.cw.cw.cw.enter(board) &&
+        normal != target.cw.cw.cw.cw.cw.enter(board))
+      throw new IllegalArgumentException("May not skip pieces")
+    copy(piece = Some(target), source = source.tail).lock
+  }
 }
 
-case class Game(input: Input, commands: Traversable[Char], seed: Long, config: Config) {
-  val actualCommands = commands.filter{ c => !("\t\n\r".contains(c)) }
+trait GameInfo {
+  def config: Config
+  def output: Output
+  def pieces: List[Piece]
+  def moveScore: Long
+  lazy val powerScore = config.phrases.map { phrase =>
+    @tailrec def find(from: Int, seen: Int): Int = {
+      val pos = output.solution.indexOf(phrase, from)
+      if (pos < 0) seen else find(pos + 1, seen + 1)
+    }
+    val count = find(0, 0)
+    if (count > 0) 300 + 2 * phrase.size * count else 0
+  }.sum
+  def totalScore = moveScore + powerScore
+}
+
+case class Game(input: Input, commands: Traversable[Char], seed: Long, config: Config) extends GameInfo {
   val numUnits = input.units.size
   val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
-  val pBuf = scala.collection.mutable.ListBuffer[(GameState, List[Char])]()
   var state = GameState(input.board, pieces)
+
+  val actualCommands = commands.filter{ c => !("\t\n\r".contains(c)) }
+  val pBuf = scala.collection.mutable.ListBuffer[(GameState, List[Char])]()
   var used = List.empty[Char]
   val iter = actualCommands.toIterator
   while (iter.nonEmpty && !state.gameOver) {
@@ -60,11 +95,23 @@ case class Game(input: Input, commands: Traversable[Char], seed: Long, config: C
   val remain = actualCommands.drop(path.size)
   if (remain.nonEmpty && !remain.isInstanceOf[Stream[_]])
     throw new IllegalArgumentException(s"didn't consume all commands from ${remain.getClass.getName}, ${remain.size} remaining")
-  val moveScore = state.score
-  val powerScore = config.phrases.map { phrase =>
-    val count = path.sliding(phrase.size).count(_ == phrase)
-    if (count > 0) 300 + 2 * phrase.size * count else 0
-  }.sum
-  def totalScore = moveScore + powerScore
   val output = Output(input.id, seed, config.tag, path)
+  val moveScore = state.score
+}
+
+case class GameSearch(input: Input, seed: Long, config: Config) extends GameInfo {
+  val numUnits = input.units.size
+  val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
+  var state = GameState(input.board, pieces)
+  var path = ""
+  while (!state.gameOver) {
+    val (next, chunk) = Paths.findBest(state, config.depth.get)
+    state = next
+    val section = chunk.map(_.toString).mkString("")
+    path += section
+    if (config.debug.contains('v')) System.out.println(s"${state.board}$section\nscore: ${state.score}\n --------")
+  }
+
+  val output = Output(input.id, seed, config.tag, path)
+  val moveScore = state.score
 }

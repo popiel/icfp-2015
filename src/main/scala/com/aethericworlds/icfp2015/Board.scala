@@ -44,7 +44,7 @@ object Cell {
   val ALL_DIRS = List(E, W, SE, SW, NE, NW)
 }
 
-case class Board(width: Int, height: Int, filled: Set[Cell]) {
+case class Board(width: Int, height: Int, filled: Set[Cell]) extends Ordered[Board] {
   override def toString = {
     (0 until height).map { y =>
       (if (y % 2 == 1) " " else "") +
@@ -55,4 +55,12 @@ case class Board(width: Int, height: Int, filled: Set[Cell]) {
   }
 
   def + (unit: Piece) = copy(filled = filled ++ unit.members)
+
+  val sumX = filled.toList.map(_.x).sum
+  val sumY = filled.toList.map(_.y).sum
+
+  def compare(that: Board) = {
+    val height = that.sumY - this.sumY
+    if (height == 0) that.sumX - this.sumX else height
+  }
 }

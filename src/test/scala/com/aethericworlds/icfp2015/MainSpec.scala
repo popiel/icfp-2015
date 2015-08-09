@@ -122,6 +122,27 @@ class MainSpec extends FunSpec with Matchers with AppendedClues {
     }
   }
 
+  describe ("Board") {
+    describe ("Ordered") {
+      it ("should prefer boards with stuff at the bottom") {
+        Board(2, 2, Set(Cell(0, 1))) should be < (Board(2, 2, Set(Cell(0, 0))))
+        Board(2, 2, Set(Cell(1, 1))) should be < (Board(2, 2, Set(Cell(0, 0))))
+        Board(2, 2, Set(Cell(0, 1))) should be < (Board(2, 2, Set(Cell(1, 0))))
+        Board(2, 2, Set(Cell(1, 1))) should be < (Board(2, 2, Set(Cell(1, 0))))
+      }
+      it ("should prefer boards with stuff at the right if heights are equal") {
+        Board(2, 2, Set(Cell(1, 0))) should be < (Board(2, 2, Set(Cell(0, 0))))
+        Board(2, 2, Set(Cell(1, 1))) should be < (Board(2, 2, Set(Cell(0, 1))))
+      }
+      it ("should maintain preferences even with other crap on the board") {
+        Board(2, 2, Set(Cell(0, 1),Cell(1, 1))) should be < (Board(2, 2, Set(Cell(0, 0),Cell(0, 1))))
+        Board(2, 2, Set(Cell(0, 1),Cell(1, 1))) should be < (Board(2, 2, Set(Cell(0, 0),Cell(1, 1))))
+        Board(2, 2, Set(Cell(0, 1),Cell(1, 1))) should be < (Board(2, 2, Set(Cell(1, 0),Cell(0, 1))))
+        Board(2, 2, Set(Cell(0, 1),Cell(1, 1))) should be < (Board(2, 2, Set(Cell(1, 0),Cell(1, 1))))
+      }
+    }
+  }
+
   describe ("Piece") {
     val p = Piece(Set(Cell(0, 0), Cell(2, 0)), Cell(1, 0))
 

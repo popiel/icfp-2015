@@ -53,12 +53,12 @@ case class Piece(members: Set[Cell], pivot: Cell) {
 sealed trait Command {
   def apply(p: Piece): Piece
 }
-case object CommandW extends Command { def apply(p: Piece) = p + Cell.W }
-case object CommandE extends Command { def apply(p: Piece) = p + Cell.E }
-case object CommandSW extends Command { def apply(p: Piece) = p + Cell.SW }
-case object CommandSE extends Command { def apply(p: Piece) = p + Cell.SE }
-case object CommandCW extends Command { def apply(p: Piece) = p.cw }
-case object CommandCCW extends Command { def apply(p: Piece) = p.ccw }
+case object CommandW   extends Command { override def toString() = "p"; def apply(p: Piece) = p + Cell.W }
+case object CommandE   extends Command { override def toString() = "b"; def apply(p: Piece) = p + Cell.E }
+case object CommandSW  extends Command { override def toString() = "a"; def apply(p: Piece) = p + Cell.SW }
+case object CommandSE  extends Command { override def toString() = "l"; def apply(p: Piece) = p + Cell.SE }
+case object CommandCW  extends Command { override def toString() = "d"; def apply(p: Piece) = p.cw }
+case object CommandCCW extends Command { override def toString() = "k"; def apply(p: Piece) = p.ccw }
 
 object Command {
   def apply(ch: Char): Command = {
