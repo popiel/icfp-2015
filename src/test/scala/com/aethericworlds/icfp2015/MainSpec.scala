@@ -3,7 +3,7 @@ package com.aethericworlds.icfp2015
 import org.json4s._
 import org.scalatest._
 
-class MainSpec extends FunSpec with Matchers with AppendedClues {
+class MainSpec extends FunSpec with Matchers with Inspectors with AppendedClues {
   describe ("Coordinator") {
     describe ("parseArgs") {
       it ("should read filenames properly") {
@@ -354,6 +354,47 @@ eee
       val input = Main.loadInputs(List("src/test/resources/problem_7.json"))(0)
       val ex = the[IllegalArgumentException] thrownBy { Game(input, """ep""", 0, Config()) }
       ex.getMessage should include ("Repeated position in path")
+    }
+
+    it ("shouldn't complain on a generated sequence") {
+      val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+      noException shouldBe thrownBy { Game(input, """
+blllllllllblllllllllballllllldddlbaaaallllklbaaaaaalllbaaaaaaaapaaaaallllpbllll
+lllllbllllllllklpalllllllkplllllllllpaaallllllbaaaaallllbaaaaaaaaddlpbllllllldl
+paaallllllbaaaaallllpaaaaaaaldplllllllldddlbaaallllllbaaaaallldddlpaaaaaaaddlpa
+alllllllbblllllllllpaaallllldddlbaaaaallldddlpaaaaaaaddlplllllllllbaalllllllbaa
+aaalllddlbaaaaaallklpaaaaaaakapbllllllldlballllllllballllllddlpaaaallllklpaaaaa
+aakapblllllllklpaaaalllldpallllllddlpaaaaaaaddlpaaaaaallddlpllllllldlpaaalllllp
+aaaaaaaalpaaaaaalllbblllllllkapaaaaaalakpblllllllllpaaallllllbaaaaaallklpaallll
+llbaaaalllddlpblllllllkklpaaaaaaaalpaaaaaalklpaaaaaalakpallllllllballllllddlpaa
+aaaalllpaaaaaaaalpblllllllllbaaaallllddlbaaaaaallddlpllllllllkklpaaaaaalakpalll
+lllllpaaallllllpaaaaaallklplllllllddlbaallllllbaaaalllpaaaaaalklppaaaaaakapllll
+llldbaallllllbaaalllllpaaaaaalakplllllllllpaaallllllbaaaaalllddlbaaaaaallklplll
+lllllbblllllllbaaaaaaaalpaaaallllkklpaaaaaaalpaalllllklklpaaaaaaaalpaaaalllddlp
+aaaaaaaalpbllllllldlbaalllllllpaaaaaaalddlbaaaaaaaddlplllllllldddlbaaalllllddlb
+aaaalllklpaaaaaalllpaaaaaaaddlpallllllddldlpaaaaalllddlbaaaaaallpaaaaaaaddlpbll
+llllldlpaalllllllpaaaallllklpaaaaaalakpaaallllddldlbbaaaaalllddlbaallllldlpaaaa
+aalklplllllllpaaaaaaklppaaaaaakaplllllllpaalllllklpaaaalllklpaaaaaaaapbllllllld
+lpalllllllbaaaaaallklpaaalllldlpaaaaaaalklbaaaaaaaapaaalllllkapaallllllddlpaaaa
+lllddlpllllllkkllpaalllllllbaaaaaaalklballlllllbaaaallllpaaaaaaaddlpaaaaallllpa
+aaaaalakplllllllllbaallllllddlbaaaallllklbaaaalllklbaaaaaallklpaaaaaaaalpaallll
+llddlpaaaaaallpaaaaaaaapllllllkkllpallllllllbaaallllllplllllllldddlbaaallllllb
+""", 0, Config()) }
+    }
+  }
+
+  describe ("Paths") {
+    describe ("reachable") {
+      it ("should generate a locking path for available positions") {
+        val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+        val start = GameState(input.board, input.units)
+        val paths = Paths(input.board, input.units(0))
+        forAll (paths.reachable) { case (where, how) =>
+          val end = start(how)
+          end.piece should equal (None)
+          end.board should equal (start.board + where)
+        }
+      }
     }
   }
 }

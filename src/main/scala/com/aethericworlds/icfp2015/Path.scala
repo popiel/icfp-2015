@@ -13,8 +13,8 @@ case class Paths(start: Board, piece: Piece) {
       if (!closed.contains(pos)) {
         closed += entry
         val children = Command.all.map(c => (pos(c), c::how))
-        val viable = children.filter(_._1.valid(start))
-        if (viable.size < children.size) available += ((pos, how.reverse))
+        val (viable, bad) = children.partition(_._1.valid(start))
+        if (bad.nonEmpty) available += ((pos, bad.head._2.reverse))
         open ++= viable.filter(x => !closed.contains(x._1))
       }
     }
