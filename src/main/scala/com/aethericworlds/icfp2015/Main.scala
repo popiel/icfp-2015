@@ -21,6 +21,8 @@ object Main extends Coordinator {
         GameSearch(input, seed, config)
       }
       _ = if (config.debug contains 'q') System.err.println(s"Problem ${write(input.id)}, seed $seed, pieces:\n${game.pieces.map(_.toString).mkString("\n")}")
+      _ = if (config.debug contains 'h') System.err.println(s"Problem ${write(input.id)}, seed $seed, pieces:\n${game.pieces.map(_.maxHeight).mkString(" ")}")
+      _ = if (config.debug contains 'r') System.err.println(s"Problem ${write(input.id)}, seed $seed, pieces:\n${game.pieces.map(_.maxRows).mkString(" ")}")
       _ = if (config.debug contains 's') System.err.println(s"Problem ${write(input.id)}, seed $seed, score ${game.totalScore}")
     } yield game.output
     println(formatOutputs(outputs))

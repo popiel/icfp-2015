@@ -10,6 +10,9 @@ case class GameState(
   score: Long = 0,
   visited: Set[Piece] = Set.empty[Piece]
 ) {
+  def this(input: Input, seed: Long) =
+    this(input.board, new Source(seed).take(input.sourceLength).map(n => input.units(n % input.units.size)).toList)
+
   def gameOver = piece == None && (source == Nil || !source.head.enter(board).valid(board))
   def apply(command: Command): GameState = {
     if (gameOver) throw new IllegalArgumentException("Command after game over")
@@ -69,9 +72,8 @@ trait GameInfo {
 }
 
 case class Game(input: Input, commands: Traversable[Char], seed: Long, config: Config) extends GameInfo {
-  val numUnits = input.units.size
-  val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
-  var state = GameState(input.board, pieces)
+  var state = new GameState(input, seed)
+  val pieces = state.source
 
   val actualCommands = commands.filter{ c => !("\t\n\r".contains(c)) }
   val pBuf = scala.collection.mutable.ListBuffer[(GameState, List[Char])]()
@@ -100,9 +102,9 @@ case class Game(input: Input, commands: Traversable[Char], seed: Long, config: C
 }
 
 case class GameSearch(input: Input, seed: Long, config: Config) extends GameInfo {
-  val numUnits = input.units.size
-  val pieces = new Source(seed).take(input.sourceLength).map(n => input.units(n % numUnits)).toList
-  var state = GameState(input.board, pieces)
+  var state = new GameState(input, seed)
+  val pieces = state.source
+
   var path = ""
   while (!state.gameOver) {
     val (next, chunk) = Paths.findBest(state, config.depth.get)

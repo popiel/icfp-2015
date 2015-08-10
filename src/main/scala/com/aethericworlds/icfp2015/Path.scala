@@ -39,4 +39,33 @@ object Paths {
       }.head
     }
   }
+
+  def findPath(board: Board, start: Piece, end: Piece): Option[List[Command]] = {
+    if (!start.valid(board) || !end.valid(board) || !end.lockable(board)) return None
+
+    val sum = Cell(end.members.toIterator.map(_.x).sum,
+                      end.members.toIterator.map(_.y).sum)
+    implicit val ordering = new Ordering[(Piece, List[Command])] {
+      def compare(a: (Piece, List[Command]), b: (Piece, List[Command])) = {
+        val aDist = a._1.members.toIterator.map(x => x.x - sum.x + x.y - sum.y).sum
+        val bDist = b._1.members.toIterator.map(x => x.x - sum.x + x.y - sum.y).sum
+        bDist - aDist
+      }
+    }
+    val open = new scala.collection.mutable.PriorityQueue[(Piece, List[Command])]()
+    var closed = Map[Piece, List[Command]]()
+    open += ((start, Nil))
+    while (open.nonEmpty) {
+      val entry = open.dequeue
+      val (pos, how) = entry
+      if (!closed.contains(pos)) {
+        closed += entry
+        val children = Command.all.map(c => (pos(c), c::how))
+        val (viable, bad) = children.partition(_._1.valid(board))
+        if (bad.nonEmpty && pos == end) return Some(bad.head._2.reverse)
+        open ++= viable.filter(x => !closed.contains(x._1))
+      }
+    }
+    return None
+  }
 }

@@ -14,8 +14,33 @@ case class Piece(members: Set[Cell], pivot: Cell) {
     b + pivot
   }
 
+  lazy val minX = members.map(_.x).min
+  lazy val maxY = members.map(_.y).max
+
+  def height = {
+    val ys = members.map(_.y)
+    ys.max - ys.min + 1
+  }
+  def maxHeight =
+    height max cw.height max cw.cw.height max cw.cw.cw.height max cw.cw.cw.cw.height max cw.cw.cw.cw.cw.height
+
+  def rows = members.map(_.y).size
+  def maxRows = 
+    rows max cw.rows max cw.cw.rows max cw.cw.cw.rows max cw.cw.cw.cw.rows max cw.cw.cw.cw.cw.rows
+
   def valid(board: Board): Boolean = {
     !members.exists(m => m.x < 0 || m.y < 0 || m.x >= board.width || m.y >= board.height || board.filled(m))
+  }
+
+  def lockable(board: Board): Boolean = {
+    Command.all.map(_(this)).exists(!_.valid(board))
+  }
+
+  def lockPath(state: GameState): Option[List[Command]] = {
+    if (!valid(state.board) || !lockable(state.board)) None
+    else {
+      None
+    }
   }
 
   def enter(board: Board): Piece = {
@@ -46,7 +71,7 @@ case class Piece(members: Set[Cell], pivot: Cell) {
           if (lifted.members(c)) "##" else "[]"
         }
       }.mkString("") + "\n"
-    }.mkString("")
+    }.mkString("", "", pivot.toString + "\n")
   }
 }
 

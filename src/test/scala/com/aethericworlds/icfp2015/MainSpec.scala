@@ -198,27 +198,37 @@ class MainSpec extends FunSpec with Matchers with Inspectors with AppendedClues 
       val game = Game(input, "", 0, Config())
       game.pieces.take(10).map(_.toString).mkString("\n") should equal (
 """P#
+Cell(0,0)
 
 P#
+Cell(0,0)
 
 P###
  ##[]
+Cell(0,0)
 
 P###
  ##[]
+Cell(0,0)
 
 ##P###
+Cell(1,0)
 
 P###
  ##[]
+Cell(0,0)
 
 ##P###
+Cell(1,0)
 
 P#
+Cell(0,0)
 
 P###
+Cell(0,0)
 
 ##P###
+Cell(1,0)
 """)
     }
 
@@ -395,6 +405,39 @@ llddlpaaaaaallpaaaaaaaapllllllkkllpallllllllbaaallllllplllllllldddlbaaallllllb
           end.board should equal (start.board + where)
         }
       }
+    }
+    describe ("findPath") {
+      it ("should find a short path to the goal") {
+        val input = Main.loadInputs(List("src/test/resources/problem_6.json"))(0)
+        val start = GameState(input.board, input.units)
+        val paths = Paths(input.board, input.units(0))
+        forAll (paths.reachable) { case (where, how) =>
+          val pathOpt = Paths.findPath(input.board, input.units(0).enter(input.board), where)
+          pathOpt should not (equal (None))
+          pathOpt.get.size should equal (how.size +- 10)
+          // println("where: " + where + "path: " + pathOpt)
+          // val end = pathOpt.get.foldLeft(start){ (s, c) => println(c + "\n" + s.piece.map(s.board + _).getOrElse(s.board)); s(c) }
+          val end = start(pathOpt.get)
+          end.piece should equal (None)
+          end.board should equal (start.board + where)
+        }
+     
+      }
+    }
+  }
+
+  describe ("Tiling") {
+    it("should be able to fill a simple case") {
+      val input = Main.loadInputs(List("src/test/resources/problem_1.json"))(0)
+      val state = new GameState(input, 0)
+      val pieces = Tiling.fill2(state, state.source.map(_.maxHeight).max)
+      pieces should equal (Nil)
+    }
+  }
+
+  describe ("PriorityQueue") {
+    it("should prefer large numbers") {
+      scala.collection.mutable.PriorityQueue(1, 2, 3).dequeue should equal (3)
     }
   }
 }
