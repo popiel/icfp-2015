@@ -1,0 +1,27 @@
+Team: Invisible Imp
+
+apopiel@aethericworlds.com
+
+Thanks go to Aetheric Worlds, Inc. for sponsoring me for this contest.  Whee!
+
+There's nothing particularly exciting here; I had too many issues chasing
+down bugs to get very far.  In particular, my attempts at tiling are horrific.
+
+Different behaviours are controlled by setting flags via the command line;
+in particular, the bottom-filling behaviours are controlled with the
+-depth # and -d t flags.  -d is actually a collection of binary toggles,
+mostly flipping on bits of debug output.
+
+I'm not high enough in the ranks for it to matter that I don't have the best
+algorithms as default.  My latest submissions were via "-depth 1 -d ts" or
+"-depth 1 -d s", depending on the problem.
+
+I'm pretty sure that the longest power phrase is
+"Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn!"
+but I was never organized enough to try to generate it in a real submission.
+
+Oh, and I wrote it all in Scala.  I've been using that at work a lot lately,
+so it was easier.  However, I never got organized enough to use the async
+features in my code, so it's all single threaded.  *sigh*
+
+That's all, folks.
