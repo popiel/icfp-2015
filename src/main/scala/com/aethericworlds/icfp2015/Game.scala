@@ -1,6 +1,7 @@
 package com.aethericworlds.icfp2015
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 case class GameState(
   board: Board,
@@ -108,8 +109,14 @@ case class GameSearch(input: Input, seed: Long, config: Config) extends GameInfo
   var path = ""
   while (!state.gameOver) {
     val (next, chunk) = Paths.findBest(state, config.depth.get)
+    val section = Try {
+      val states = chunk.foldLeft(state::Nil)((s,c) => s.head(c) :: s).reverse.tail
+      val first = states.takeWhile(_.piece != None).last
+      val where = first.piece.get
+      Paths.findPowerPath(state.board, state.source.head.enter(state.board), where, config).get
+    }.getOrElse(chunk.map(_.toString).mkString(""))
+    // val section = chunk.map(_.toString).mkString("")
     state = next
-    val section = chunk.map(_.toString).mkString("")
     path += section
     if (config.debug.contains('v')) System.out.println(s"${state.board}$section\nscore: ${state.score}\n --------")
   }
@@ -124,7 +131,9 @@ case class GameTile(input: Input, seed: Long, config: Config) extends GameInfo {
 
   var path = ""
   while (!state.gameOver) {
-    val pieces = Tiling.fill2(state, state.source.map(_.maxHeight).max)
+    val maxHeight = config.depth.getOrElse(60) min state.source.map(_.maxHeight).max
+    println("Tiling with max height " + maxHeight)
+    val pieces = Tiling.fill2(state, maxHeight)
     pieces.foreach { piece =>
       val chunk = try {
         Paths.findPowerPath(state.board, state.source.head.enter(state.board), piece, config).get

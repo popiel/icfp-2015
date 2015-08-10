@@ -130,9 +130,9 @@ class MainSpec extends FunSpec with Matchers with Inspectors with AppendedClues 
         Board(2, 2, Set(Cell(0, 1))) should be < (Board(2, 2, Set(Cell(1, 0))))
         Board(2, 2, Set(Cell(1, 1))) should be < (Board(2, 2, Set(Cell(1, 0))))
       }
-      it ("should prefer boards with stuff at the right if heights are equal") {
-        Board(2, 2, Set(Cell(1, 0))) should be < (Board(2, 2, Set(Cell(0, 0))))
-        Board(2, 2, Set(Cell(1, 1))) should be < (Board(2, 2, Set(Cell(0, 1))))
+      it ("should prefer boards with stuff at the left if heights are equal") {
+        Board(2, 2, Set(Cell(0, 0))) should be < (Board(2, 2, Set(Cell(1, 0))))
+        Board(2, 2, Set(Cell(0, 1))) should be < (Board(2, 2, Set(Cell(1, 1))))
       }
       it ("should maintain preferences even with other crap on the board") {
         Board(2, 2, Set(Cell(0, 1),Cell(1, 1))) should be < (Board(2, 2, Set(Cell(0, 0),Cell(0, 1))))

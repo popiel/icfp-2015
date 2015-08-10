@@ -61,6 +61,6 @@ case class Board(width: Int, height: Int, filled: Set[Cell]) extends Ordered[Boa
 
   def compare(that: Board) = {
     val height = that.sumY - this.sumY
-    if (height == 0) that.sumX - this.sumX else height
+    if (height == 0) this.sumX - that.sumX else height
   }
 }

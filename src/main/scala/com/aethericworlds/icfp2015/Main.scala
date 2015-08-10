@@ -14,10 +14,10 @@ object Main extends Coordinator {
       _ = if (config.debug contains 'b') System.err.println(s"Problem ${write(input.id)} board:\n${input.board}")
       _ = if (config.debug contains 'u') System.err.println(s"Problem ${write(input.id)} units:\n${input.units.map(_.toString).mkString("\n")}")
       seed <- config.seed.map(List(_)).getOrElse(input.sourceSeeds)
-      game = if (config.depth != None) {
-        GameSearch(input, seed, config)
-      } else if (config.debug.contains('t')) {
+      game = if (config.debug.contains('t')) {
         GameTile(input, seed, config)
+      } else if (config.depth != None) {
+        GameSearch(input, seed, config)
       } else {
         val phrase = config.phrases.mkString("")
         Game(input, Stream.continually(phrase).flatten, seed, config)
