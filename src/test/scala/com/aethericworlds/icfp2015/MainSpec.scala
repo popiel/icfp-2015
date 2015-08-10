@@ -431,7 +431,8 @@ llddlpaaaaaallpaaaaaaaapllllllkkllpallllllllbaaallllllplllllllldddlbaaallllllb
       val input = Main.loadInputs(List("src/test/resources/problem_1.json"))(0)
       val state = new GameState(input, 0)
       val pieces = Tiling.fill2(state, state.source.map(_.maxHeight).max)
-      pieces should equal (Nil)
+      pieces should have size (15)
+      forAll (pieces) { p => p.maxY should equal (14) }
     }
   }
 

@@ -10,8 +10,8 @@ trait Tiling {
       dropped = rotated + Cell(0, state.board.height - 1 - y - rotated.maxY)
       x <- 0 until state.board.width
       piece = dropped + Cell(x - dropped.minX, 0)
-      // if Paths.findPath(state.board, state.source.head.enter(state.board), piece) != None
-      if piece.valid(state.board) && piece.lockable(state.board)
+      if Paths.findPath(state.board, state.source.head.enter(state.board), piece) != None
+      // if piece.valid(state.board) && piece.lockable(state.board)
     } yield piece).distinct
   }
 
@@ -54,7 +54,7 @@ trait Tiling {
           open ++= children
           val oldBest = best
           best = (best +: children).max
-          if (best != oldBest) println("New Best: " + (best._1.board, best._1.score, best._2))
+          // if (best != oldBest) println("New Best: " + (best._1.board, best._1.score, best._2))
         }
       }
     }

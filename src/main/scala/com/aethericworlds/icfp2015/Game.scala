@@ -40,6 +40,8 @@ case class GameState(
 
   def apply(path: Traversable[Command]): GameState = (this /: path){ (s, c) => s(c) }
 
+  def apply(path: Traversable[Char]): GameState = apply(path.map(Command(_)))
+
   def apply(target: Piece): GameState = {
     if (piece != None) throw new IllegalStateException("May not jump while falling")
     if (!target.valid(board)) throw new IllegalArgumentException("May not jump into a wall")
@@ -112,6 +114,32 @@ case class GameSearch(input: Input, seed: Long, config: Config) extends GameInfo
     val section = chunk.map(_.toString).mkString("")
     path += section
     if (config.debug.contains('v')) System.out.println(s"${state.board}$section\nscore: ${state.score}\n --------")
+  }
+
+  val output = Output(input.id, seed, config.tag, path)
+  val moveScore = state.score
+}
+
+case class GameTile(input: Input, seed: Long, config: Config) extends GameInfo {
+  var state = new GameState(input, seed)
+  val pieces = state.source
+
+  var path = ""
+  while (!state.gameOver) {
+    val pieces = Tiling.fill2(state, state.source.map(_.maxHeight).max)
+    pieces.foreach { piece =>
+      val chunk = try {
+        Paths.findPowerPath(state.board, state.source.head.enter(state.board), piece, config).get
+      } catch {
+        case _: java.util.NoSuchElementException =>
+          println(s"Borked placement for ${state.source.head.enter(state.board)} to $piece on ${state.board}")
+          Paths.findBest(state, 1)._2
+      }
+      state = state(chunk)
+      val section = chunk.map(_.toString).mkString("")
+      path += section
+      if (config.debug.contains('v')) System.out.println(s"${state.board}$section\nscore: ${state.score}\n --------")
+    }
   }
 
   val output = Output(input.id, seed, config.tag, path)
