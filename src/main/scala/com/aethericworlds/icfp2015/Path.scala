@@ -1,5 +1,7 @@
 package com.aethericworlds.icfp2015
 
+import scala.util.Try
+
 case class Paths(start: Board, piece: Piece) {
   val initial = piece.enter(start)
   val reachable: Map[Piece, List[Command]] = {
@@ -72,10 +74,12 @@ object Paths {
   def findPowerPath(board: Board, start: Piece, end: Piece, config: Config): Option[String] = {
     if (!start.valid(board) || !end.valid(board) || !end.lockable(board)) return None
 
+    val lock = Command.all.find(c => !end(c).valid(board)).get
+
     val sum = Cell(end.members.toIterator.map(_.x).sum,
                       end.members.toIterator.map(_.y).sum)
-    implicit val ordering = new Ordering[(Piece, List[Command])] {
-      def compare(a: (Piece, List[Command]), b: (Piece, List[Command])) = {
+    implicit val ordering = new Ordering[(Piece, String)] {
+      def compare(a: (Piece, String), b: (Piece, String)) = {
         val aDist = a._1.members.toIterator.map(x => x.x - sum.x + x.y - sum.y).sum
         val bDist = b._1.members.toIterator.map(x => x.x - sum.x + x.y - sum.y).sum
         bDist - aDist
@@ -87,19 +91,19 @@ object Paths {
     while (open.nonEmpty) {
       val entry = open.dequeue
       val (pos, how) = entry
+      if (pos == end) return Some(how + lock)
       if (!closed.contains(pos)) {
         closed += entry
-        val simple = Command.all.map(c => (pos(c), how + c))
-	val complex = config.phrases.flatMap { phrase =>
+        // val simple: List[(Piece, String)] = Command.all.map { c => (pos(c), how + c) }
+	val complex: List[(Piece, String)] = (config.phrases ++ Command.all.map(_.toString)).flatMap { phrase =>
           Try {
             val chunk = how + phrase
-            val next = GameState(board, List(start), Some(start))(chunk)
-            List((next, chunk))
+            val next = GameState(board, Nil, Some(start))(Command(chunk))
+            List((next.piece.get, chunk))
           }.getOrElse(Nil)
         }
-        val children = simple + complex
+        val children = /*simple ++*/ complex
         val (viable, bad) = children.partition(_._1.valid(board))
-        if (bad.nonEmpty && pos == end) return Some(bad.head._2)
         open ++= viable.filter(x => !closed.contains(x._1))
       }
     }

@@ -40,8 +40,6 @@ case class GameState(
 
   def apply(path: Traversable[Command]): GameState = (this /: path){ (s, c) => s(c) }
 
-  def apply(path: Traversable[Char]): GameState = apply(path.map(Command(_)))
-
   def apply(target: Piece): GameState = {
     if (piece != None) throw new IllegalStateException("May not jump while falling")
     if (!target.valid(board)) throw new IllegalArgumentException("May not jump into a wall")
@@ -133,12 +131,19 @@ case class GameTile(input: Input, seed: Long, config: Config) extends GameInfo {
       } catch {
         case _: java.util.NoSuchElementException =>
           println(s"Borked placement for ${state.source.head.enter(state.board)} to $piece on ${state.board}")
-          Paths.findBest(state, 1)._2
+          Paths.findBest(state, 1)._2.map(_.toString).mkString("")
       }
-      state = state(chunk)
-      val section = chunk.map(_.toString).mkString("")
-      path += section
-      if (config.debug.contains('v')) System.out.println(s"${state.board}$section\nscore: ${state.score}\n --------")
+      try {
+        state = state(Command(chunk))
+        path += chunk
+      } catch {
+        case _: IllegalArgumentException =>
+          println(s"Borked path for $chunk")
+          val c2 = Paths.findPath(state.board, state.source.head.enter(state.board), piece).get.map(_.toString).mkString("")
+          state = state(Command(c2))
+          path += c2
+      }
+      if (config.debug.contains('v')) System.out.println(s"${state.board}$chunk\nscore: ${state.score}\n --------")
     }
   }
 
